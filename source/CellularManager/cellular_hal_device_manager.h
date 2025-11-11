@@ -197,9 +197,9 @@ int cellular_hal_device_get_device_information (CellularDeviceInfoStruct *devInf
 int cellular_hal_device_get_data_interface (char *data_interface);
 
 #ifdef FEATURE_MODEM_HAL
-const DEVICE_HAL_ABSTRATCOR_ modem_device_hal;
+extern const DEVICE_HAL_ABSTRATCOR_ modem_device_hal;
 #endif
 #ifdef FEATURE_RNDIS_HAL
-const DEVICE_HAL_ABSTRATCOR_ rndis_device_hal;
+extern const DEVICE_HAL_ABSTRATCOR_ rndis_device_hal;
 #endif
 #endif // __CELLULAR_HAL_DEVICE_MANAGER_

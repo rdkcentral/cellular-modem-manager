@@ -205,6 +205,7 @@ static void* udev_eventhandler_thread (void *arg)
     struct udev *udev;
     struct udev_device *dev;
     struct udev_monitor *mon;
+    char *interface;
     int fd;
 
     CcspTraceInfo (("%s - Started UDEV monitoring \n", __FUNCTION__));
@@ -260,7 +261,9 @@ static void* udev_eventhandler_thread (void *arg)
                         //Enable USB RNDIS HAL
                         memcpy (&g_device_hal, &rndis_device_hal, sizeof(rndis_device_hal));
                         g_device_hal.hal_init (&g_pstCtxInputStruct);
-                        g_device_hal.hal_set_device_props (udev_device_get_property_value (dev, "INTERFACE"), 1);
+                        interface = udev_device_get_property_value(dev, "INTERFACE");
+                        CcspTraceInfo (("%s - USB interface name: [%s]\n", __FUNCTION__, interface));
+                        g_device_hal.hal_set_device_props (interface, 1);
 
                         g_device_status = USB_DEVICE_ATTACHED;
                         // release the lock
@@ -476,11 +479,11 @@ int cellular_hal_device_init (CellularContextInitInputStruct *pstCtxInputStruct)
 #if defined(FEATURE_RNDIS_HAL) || defined(FEATURE_MODEM_HAL)
         //Initiate the thread for USB Event handling
         pthread_create (&g_usb_eventhandler_thread, NULL,
-                        &usb_eventhandler_thread, (void*) NULL);
+                        usb_eventhandler_thread, (void*) NULL);
 
         //Initiate the thread for UDEV Event handling
         pthread_create (&g_udev_eventhandler_thread, NULL,
-                        &udev_eventhandler_thread, (void*) NULL);
+                        udev_eventhandler_thread, (void*) NULL);
 
         // Now that listeners are setup, reset the USB port, this will bring the device to a known state
         // and our listeners will catch the device.
