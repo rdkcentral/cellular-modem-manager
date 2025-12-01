@@ -634,6 +634,9 @@ int CellularMgrUpdatePhyStatus ( char *wan_ifname, CellularDeviceOpenStatus_t de
             return RETURN_ERROR;
         }
 
+        //RDK-WanManager expects interface to be up and running
+        v_secure_system("ip link set %s up", wan_ifname);
+
         // Set Phy.Status
         memset( paramName, 0, sizeof(paramName) );
         memset( paramValue, 0, sizeof(paramValue) );
