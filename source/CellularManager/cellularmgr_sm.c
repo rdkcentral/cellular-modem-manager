@@ -387,12 +387,19 @@ int CellularMgrIPReadyCBForSM( CellularIPStruct *pstIPStruct, CellularDeviceIPRe
         CcspTraceInfo(("%s %d: Failed to set LinkStatus in Interface table\n", __FUNCTION__, __LINE__));
     }
 #endif
-    //Need to inform all ip details to WAN manager
-    if ( CellularMgr_Util_SendIPToWanMgr( pstIPStruct ) != RETURN_OK ) 
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
+    if( (pIpSource != NULL) && strncmp(pIpSource, DML_PARAM_VALUE_IPSOURCE_DHCP, strlen(DML_PARAM_VALUE_IPSOURCE_DHCP)) )
     {
-        CcspTraceError(("%s - Failed to send IP info to WanManager \n", __FUNCTION__));
-        return RETURN_ERROR;
+#endif
+        //Need to inform all ip details to WAN manager
+        if ( CellularMgr_Util_SendIPToWanMgr( pstIPStruct ) != RETURN_OK )
+        {
+            CcspTraceError(("%s - Failed to send IP info to WanManager \n", __FUNCTION__));
+            return RETURN_ERROR;
+        }
+#if defined(WAN_MANAGER_UNIFICATION_ENABLED)
     }
+#endif
 #ifdef HYBRID_SUPPORT
     if (ip_ready_status == DEVICE_NETWORK_IP_READY)
     {
