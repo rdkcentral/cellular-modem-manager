@@ -4,7 +4,7 @@ Cellular Modem Manager, also known as **RdkCellularManager-MM**, is the RDK-B co
 
 Cellular Modem Manager monitors and controls cellular modem initialization, SIM card management, network registration, profile configuration, and packet data network connectivity. The component implements the `Device.Cellular` TR-181 data model namespace enabling standardized access to cellular-specific parameters including interface status, signal quality, network registration state, and connection statistics. The component supports multiple cellular modem backends through conditional compilation: QMI (Qualcomm MSM Interface) direct access, ModemManager daemon integration (the primary default path using `libmm-glib` and `libmbim`), and a hybrid dynamic-detection mode that auto-selects between RNDIS and ModemManager-based control at runtime.
 
-The component integrates with RDK-B message bus infrastructure through R-BUS for real-time event notifications and parameter synchronization. Cellular Modem Manager maintains the cellular WAN interface lifecycle through an internal state machine that responds to modem events, manages network attachment sequences, and coordinates IP address configuration with the system networking stack.
+The component integrates with RDK-B R-BUS infrastructure through R-BUS for real-time event notifications and parameter synchronization. Cellular Modem Manager maintains the cellular WAN interface lifecycle through an internal state machine that responds to modem events, manages network attachment sequences, and coordinates IP address configuration with the system networking stack.
 
 ```mermaid
 graph LR
@@ -283,18 +283,16 @@ The `udev_eventhandler_thread` monitors the `net` subsystem for interface add/re
 
 **Build-Time Flags and Configuration:**
 
-| Configure Option     | DISTRO Feature                  | Build Flag               | Purpose                                                                                                 | Default                                                |
-| -------------------- | ------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `--enable-gtestapp`  | N/A                             | `GTEST_ENABLE`           | Enable Google Test framework support for unit testing                                                   | Disabled                                               |
-| `--enable-notify`    | N/A                             | `ENABLE_SD_NOTIFY`       | Enable systemd service notification support for service readiness signaling                             | Disabled                                               |
-| `--enable-dropearly` | N/A                             | `DROP_ROOT_EARLY`        | Enable dropping root privileges early in initialization for security                                    | Disabled                                               |
-| N/A                  | `HYBRID_SUPPORT` (Yocto DISTRO) | `HYBRID_SUPPORT`         | Enable hybrid USB device manager with runtime auto-detection of RNDIS vs ModemManager-controlled modems | Conditional                                            |
-| N/A                  | N/A                             | `MM_SUPPORT`             | Enable ModemManager daemon integration (`libmm-glib`/`libmbim`) as primary modem control path           | **Default** (set when `HYBRID_SUPPORT` is not enabled) |
-| N/A                  | N/A                             | `QMI_SUPPORT`            | Enable direct QMI protocol access bypassing ModemManager (legacy/platform-specific)                     | Conditional                                            |
-| N/A                  | N/A                             | `FEATURE_MODEM_HAL`      | Within `HYBRID_SUPPORT`: enable the ModemManager-based USB modem HAL path                               | Conditional                                            |
-| N/A                  | N/A                             | `FEATURE_RNDIS_HAL`      | Within `HYBRID_SUPPORT`: enable the RNDIS/CDC-Ether USB dongle HAL path                                 | Conditional                                            |
-| N/A                  | N/A                             | `RBUS_BUILD_FLAG_ENABLE` | Enable RBus messaging infrastructure for inter-component communication                                  | Platform Dependent                                     |
-| N/A                  | N/A                             | `FEATURE_SUPPORT_RDKLOG` | Enable RDK logging framework integration for centralized log management                                 | Platform Dependent                                     |
+| Configure Option    | DISTRO Feature                  | Build Flag               | Purpose                                                                                                 | Default                                                |
+| ------------------- | ------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `--enable-gtestapp` | N/A                             | `GTEST_ENABLE`           | Enable Google Test framework support for unit testing                                                   | Disabled                                               |
+| N/A                 | `HYBRID_SUPPORT` (Yocto DISTRO) | `HYBRID_SUPPORT`         | Enable hybrid USB device manager with runtime auto-detection of RNDIS vs ModemManager-controlled modems | Conditional                                            |
+| N/A                 | N/A                             | `MM_SUPPORT`             | Enable ModemManager daemon integration (`libmm-glib`/`libmbim`) as primary modem control path           | **Default** (set when `HYBRID_SUPPORT` is not enabled) |
+| N/A                 | N/A                             | `QMI_SUPPORT`            | Enable direct QMI protocol access bypassing ModemManager (legacy/platform-specific)                     | Conditional                                            |
+| N/A                 | N/A                             | `FEATURE_MODEM_HAL`      | Within `HYBRID_SUPPORT`: enable the ModemManager-based USB modem HAL path                               | Conditional                                            |
+| N/A                 | N/A                             | `FEATURE_RNDIS_HAL`      | Within `HYBRID_SUPPORT`: enable the RNDIS/CDC-Ether USB dongle HAL path                                 | Conditional                                            |
+| N/A                 | N/A                             | `RBUS_BUILD_FLAG_ENABLE` | Enable R-BUS messaging infrastructure for inter-component communication                                 | Platform Dependent                                     |
+| N/A                 | N/A                             | `FEATURE_SUPPORT_RDKLOG` | Enable RDK logging framework integration for centralized log management                                 | Platform Dependent                                     |
 
 <br>
 
@@ -303,12 +301,12 @@ The `udev_eventhandler_thread` monitors the `net` subsystem for interface add/re
 - **RDK-B Components**: `CcspPandM`, `CcspPsm`, `WebPA`, `CcspCommonLibrary`
 - **HAL Dependencies**: Cellular HAL APIs with backend selected by build flag: `libqmi-glib` (QMI_SUPPORT), `libmm-glib` + ModemManager daemon (MM_SUPPORT / HYBRID modem path), `libusb` + `libudev` (HYBRID_SUPPORT)
 - **ModemManager**: Required for `MM_SUPPORT` (default) and `HYBRID_SUPPORT` with `FEATURE_MODEM_HAL`; provides `libmm-glib` client library and `org.freedesktop.ModemManager1` D-Bus service
-- **Systemd Services**: `CcspCrSsp.service`, `CcspPsmSsp.service` must be active before `RdkCellularManager.service` starts
-- **Message Bus**: R-BUS registration under cellular namespace for event publishing and parameter access
+- **Systemd Services**: `CcspCrSsp.service`, `PsmSsp.service` must be active before `RdkCellularManager.service` starts
+- **R-BUS**: R-BUS registration under cellular namespace for event publishing and parameter access
 - **TR-181 Data Model**: `Device.Cellular` object hierarchy implementation for interface management and statistics
 - **Configuration Files**: `RdkCellularManager.xml` for TR-181 parameter definitions located in component configuration directory
 - **System Libraries**: `libnanomsg`, `libsysevent`, `libsyscfg`, `libwebconfig_framework`, `libsecure_wrapper`, `libmsgpackc`, `libcurl`, `libtrower-base64`
-- **Startup Order**: Initialize after network interfaces are available, PSM services are running, and message bus infrastructure is established
+- **Startup Order**: Initialize after network interfaces are available, PSM services are running, and R-BUS infrastructure is established
 
 <br>
 
@@ -317,7 +315,7 @@ The `udev_eventhandler_thread` monitors the `net` subsystem for interface add/re
 Cellular Modem Manager implements a multi-threaded architecture designed to handle concurrent modem operations, state machine execution, and external communications without blocking critical operations.
 
 - **Threading Architecture**: Multi-threaded with main event loop and specialized worker threads for state machine execution
-- **Main Thread**: Handles TR-181 parameter requests, R-BUS message processing, component lifecycle management, and message bus interface operations
+- **Main Thread**: Handles TR-181 parameter requests, R-BUS message processing, component lifecycle management, and R-BUS interface operations
 - **Main worker Threads**:
   - **State Machine Thread**: Executes cellular policy control state machine with 500ms loop interval managing modem lifecycle transitions, network registration sequences, and connection establishment
   - **HAL Event Threads**: Process asynchronous callbacks from cellular HAL layer for modem events, registration status updates, and packet service notifications
@@ -394,12 +392,12 @@ During normal operation, Cellular Modem Manager responds to various modem events
 sequenceDiagram
     participant Init as Initialization Process
     participant SSP as SSP Main
-    participant MsgBus as Message Bus Interface
+    participant MsgBus as R-BUS Interface
     participant HAL as Cellular HAL
     participant SM as State Machine
 
     Init->>SSP: component_start()
-    SSP->>MsgBus: Initialize Message Bus
+    SSP->>MsgBus: Initialize R-BUS
     MsgBus-->>SSP: Bus Initialized
     SSP->>HAL: cellular_hal_init()
     HAL-->>SSP: HAL Initialized
@@ -491,15 +489,15 @@ Cellular Modem Manager is organized into specialized modules responsible for dif
 
 | Module/Class                                      | Description                                                                                                                                                                                 | Key Files                                                                                                                                                                                                                                       |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Service Support Platform**                      | Process lifecycle management, message bus initialization, and component entry point providing integration with RDK-B service infrastructure                                                 | `cellularmgr_main.c`, `cellularmgr_ssp_action.c`, `cellularmgr_ssp_internal.h`, `cellularmgr_messagebus_interface.c`                                                                                                                            |
+| **Service Support Platform**                      | Process lifecycle management, R-BUS initialization, and component entry point providing integration with RDK-B service infrastructure                                                 | `cellularmgr_main.c`, `cellularmgr_ssp_action.c`, `cellularmgr_ssp_internal.h`, `cellularmgr_messagebus_interface.c`                                                                                                                            |
 | **State Machine Controller**                      | Policy-driven state machine managing cellular interface lifecycle from modem detection through network registration to active data connection with autonomous state transitions             | `cellularmgr_sm.c`, `cellularmgr_sm.h`                                                                                                                                                                                                          |
 | **Cellular Management APIs**                      | Core business logic coordinating modem operations, profile management, network registration, and connection control with centralized data structure management                              | `cellularmgr_cellular_apis.c`, `cellularmgr_cellular_apis.h`, `cellularmgr_cellular_internal.c`, `cellularmgr_cellular_internal.h`                                                                                                              |
 | **TR-181 Data Model Layer**                       | `Device.Cellular` object implementation providing standardized interface for cellular parameter access with validation, commit, and rollback support                                        | `cellularmgr_cellular_dml.c`, `cellularmgr_cellular_dml.h`, `cellularmgr_cellular_param.c`, `cellularmgr_plugin_main.c`, `cellularmgr_plugin_main_apis.c`                                                                                       |
-| **R-BUS Integration**                             | R-BUS data element registration, get/set handlers, and event publishing for real-time cellular interface monitoring and control                                                              | `cellularmgr_rbus_dml.c`, `cellularmgr_rbus_dml.h`, `cellularmgr_rbus_events.c`, `cellularmgr_rbus_events.h`, `cellularmgr_rbus_helpers.c`                                                                                                      |
+| **R-BUS Integration**                             | R-BUS data element registration, get/set handlers, and event publishing for real-time cellular interface monitoring and control                                                             | `cellularmgr_rbus_dml.c`, `cellularmgr_rbus_dml.h`, `cellularmgr_rbus_events.c`, `cellularmgr_rbus_events.h`, `cellularmgr_rbus_helpers.c`                                                                                                      |
 | **WebConfig Support**                             | Web configuration framework integration for remote cellular configuration management through cloud-based configuration updates                                                              | `cellularmgr_cellular_webconfig_api.c`, `cellularmgr_cellular_webconfig_api.h`                                                                                                                                                                  |
 | **HAL Abstraction Layer**                         | Hardware abstraction dispatch layer routing calls to the active backend: `QMI_SUPPORT` (direct QMI), `MM_SUPPORT` (ModemManager/`libmm-glib`), or `HYBRID_SUPPORT` (dynamic device manager) | `cellular_hal.c`, `cellular_hal.h`, `cellular_hal_qmi_apis.c`, `cellular_hal_mm_apis.c`, `cellular_hal_device_manager.c`, `cellular_hal_device_abstraction.c`, `cellular_hal_modem_apis.c`, `cellular_hal_rndis_apis.c`, `cellular_hal_utils.c` |
 | **HYBRID Device Manager** _(HYBRID_SUPPORT only)_ | Runtime USB device detection and HAL selection using `libusb` hotplug and `libudev` network interface monitoring; maintains HAL virtual function table                                      | `cellular_hal_device_manager.c`, `cellular_hal_device_abstraction.c`                                                                                                                                                                            |
-| **Bus Utilities**                                 | Component discovery and parameter access utilities for interacting with other RDK-B components through message bus infrastructure                                                           | `cellularmgr_bus_utils.c`, `cellularmgr_bus_utils.h`                                                                                                                                                                                            |
+| **Bus Utilities**                                 | Component discovery and parameter access utilities for interacting with other RDK-B components through R-BUS infrastructure                                                           | `cellularmgr_bus_utils.c`, `cellularmgr_bus_utils.h`                                                                                                                                                                                            |
 
 ## Component Interactions
 
@@ -510,9 +508,6 @@ Cellular Modem Manager maintains extensive interactions with RDK-B middleware co
 | Target Component/Layer          | Interaction Purpose                                                                                                                                                                      | Key APIs/Endpoints                                                                                                    |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | **RDK-B Middleware Components** |                                                                                                                                                                                          |                                                                                                                       |
-| CcspPandM                       | TR-181 parameter registration, component configuration management, operational state coordination                                                                                        | R-BUS data element registration, parameter get/set handlers                                                            |
-| CcspPsm                         | Persistent cellular configuration storage including profile settings, enable state, and user credentials                                                                                 | `PSM_Set_Record_Value2()`, `PSM_Get_Record_Value2()`                                                                  |
-| WebPA                           | Cloud-based management interface for remote cellular configuration and monitoring                                                                                                        | R-BUS parameter access, event subscriptions                                                                            |
 | **System & HAL Layers**         |                                                                                                                                                                                          |                                                                                                                       |
 | Cellular HAL                    | Modem initialization, network registration control, profile configuration, packet data connection management                                                                             | `cellular_hal_init()`, `cellular_hal_open_device()`, `cellular_hal_start_network()`, `cellular_hal_get_device_info()` |
 | ModemManager Daemon             | Modem lifecycle management and protocol abstraction accessed via D-Bus in MM_SUPPORT and HYBRID_SUPPORT (modem path); provides MBIM (`libmbim`) and QMI (`libqmi-glib`) protocol support | `mm_manager_new_sync()`, `libmm-glib` D-Bus API, `org.freedesktop.ModemManager1`                                      |
