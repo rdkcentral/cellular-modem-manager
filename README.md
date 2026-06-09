@@ -396,7 +396,6 @@ sequenceDiagram
     participant HAL as Cellular HAL
     participant SM as State Machine
 
-    Init->>SSP: component_start()
     SSP->>MsgBus: Initialize R-BUS
     MsgBus-->>SSP: Bus Initialized
     SSP->>HAL: cellular_hal_init()
@@ -418,7 +417,6 @@ sequenceDiagram
 
     Client->>RBus: R-BUS Get (Device.Cellular.Interface.1.Status)
     RBus->>DML: Cellular_Interface_GetParamStringValue()
-    DML->>CellAPI: CellularMgr_GetInterfaceStatus()
     CellAPI->>HAL: cellular_hal_get_device_info()
     HAL-->>CellAPI: Device Status
     CellAPI-->>DML: Interface Status
@@ -489,7 +487,7 @@ Cellular Modem Manager is organized into specialized modules responsible for dif
 
 | Module/Class                                      | Description                                                                                                                                                                                 | Key Files                                                                                                                                                                                                                                       |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Service Support Platform**                      | Process lifecycle management, R-BUS initialization, and component entry point providing integration with RDK-B service infrastructure                                                 | `cellularmgr_main.c`, `cellularmgr_ssp_action.c`, `cellularmgr_ssp_internal.h`, `cellularmgr_messagebus_interface.c`                                                                                                                            |
+| **Service Support Platform**                      | Process lifecycle management, R-BUS initialization, and component entry point providing integration with RDK-B service infrastructure                                                       | `cellularmgr_main.c`, `cellularmgr_ssp_action.c`, `cellularmgr_ssp_internal.h`, `cellularmgr_messagebus_interface.c`                                                                                                                            |
 | **State Machine Controller**                      | Policy-driven state machine managing cellular interface lifecycle from modem detection through network registration to active data connection with autonomous state transitions             | `cellularmgr_sm.c`, `cellularmgr_sm.h`                                                                                                                                                                                                          |
 | **Cellular Management APIs**                      | Core business logic coordinating modem operations, profile management, network registration, and connection control with centralized data structure management                              | `cellularmgr_cellular_apis.c`, `cellularmgr_cellular_apis.h`, `cellularmgr_cellular_internal.c`, `cellularmgr_cellular_internal.h`                                                                                                              |
 | **TR-181 Data Model Layer**                       | `Device.Cellular` object implementation providing standardized interface for cellular parameter access with validation, commit, and rollback support                                        | `cellularmgr_cellular_dml.c`, `cellularmgr_cellular_dml.h`, `cellularmgr_cellular_param.c`, `cellularmgr_plugin_main.c`, `cellularmgr_plugin_main_apis.c`                                                                                       |
@@ -497,7 +495,7 @@ Cellular Modem Manager is organized into specialized modules responsible for dif
 | **WebConfig Support**                             | Web configuration framework integration for remote cellular configuration management through cloud-based configuration updates                                                              | `cellularmgr_cellular_webconfig_api.c`, `cellularmgr_cellular_webconfig_api.h`                                                                                                                                                                  |
 | **HAL Abstraction Layer**                         | Hardware abstraction dispatch layer routing calls to the active backend: `QMI_SUPPORT` (direct QMI), `MM_SUPPORT` (ModemManager/`libmm-glib`), or `HYBRID_SUPPORT` (dynamic device manager) | `cellular_hal.c`, `cellular_hal.h`, `cellular_hal_qmi_apis.c`, `cellular_hal_mm_apis.c`, `cellular_hal_device_manager.c`, `cellular_hal_device_abstraction.c`, `cellular_hal_modem_apis.c`, `cellular_hal_rndis_apis.c`, `cellular_hal_utils.c` |
 | **HYBRID Device Manager** _(HYBRID_SUPPORT only)_ | Runtime USB device detection and HAL selection using `libusb` hotplug and `libudev` network interface monitoring; maintains HAL virtual function table                                      | `cellular_hal_device_manager.c`, `cellular_hal_device_abstraction.c`                                                                                                                                                                            |
-| **Bus Utilities**                                 | Component discovery and parameter access utilities for interacting with other RDK-B components through R-BUS infrastructure                                                           | `cellularmgr_bus_utils.c`, `cellularmgr_bus_utils.h`                                                                                                                                                                                            |
+| **Bus Utilities**                                 | Component discovery and parameter access utilities for interacting with other RDK-B components through R-BUS infrastructure                                                                 | `cellularmgr_bus_utils.c`, `cellularmgr_bus_utils.h`                                                                                                                                                                                            |
 
 ## Component Interactions
 
