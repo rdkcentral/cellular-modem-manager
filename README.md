@@ -4,7 +4,7 @@ Cellular Modem Manager, also known as **RdkCellularManager**, is the RDK-B compo
 
 Cellular Modem Manager monitors and controls cellular modem initialization, SIM card management, network registration, profile configuration, and packet data network connectivity. The component implements the `Device.Cellular` TR-181 data model namespace enabling standardized access to cellular-specific parameters including interface status, signal quality, network registration state, and connection statistics. The component supports multiple cellular modem backends through conditional compilation: QMI (Qualcomm MSM Interface) direct access, ModemManager daemon integration (the primary default path using `libmm-glib` and `libmbim`), and a hybrid dynamic-detection mode that auto-selects between RNDIS and ModemManager-based control at runtime.
 
-The component integrates with RDK-B R-BUS infrastructure through R-BUS for real-time event notifications and parameter synchronization. Cellular Modem Manager maintains the cellular WAN interface lifecycle through an internal state machine that responds to modem events, manages network attachment sequences, and coordinates IP address configuration with the system networking stack.
+The component integrates with RDK-B R-BUS infrastructure for real-time event notifications and parameter synchronization. Cellular Modem Manager maintains the cellular WAN interface lifecycle through an internal state machine that responds to modem events, manages network attachment sequences, and coordinates IP address configuration with the system networking stack.
 
 ```mermaid
 graph LR
